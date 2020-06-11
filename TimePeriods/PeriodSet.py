@@ -63,7 +63,9 @@ class TimePeriodSet:
             if intersection_periods \
             else other
 
-        self._periods = self._periods[:begin_idx] + [new_period] + (self._periods[end_idx:] if end_idx else [])
+        self._periods = self._periods[:begin_idx] + \
+            [new_period] + \
+            (self._periods[end_idx:] if end_idx is not None else [])
         return self
 
     __iadd__ = __ior__
@@ -111,7 +113,8 @@ class TimePeriodSet:
             # Here, we have period.begin > other_period.end
             # We'll switch to the next period, but first, we need to "rewind" one period, because it may intersect
             # both the current other_period and the next
-            idx -= 1
+            if idx:
+                idx -= 1
 
         self._periods = common_periods
         return self

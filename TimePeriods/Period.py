@@ -2,6 +2,10 @@
 from datetime import datetime
 
 
+INFINITY_BEGIN = datetime.min
+INFINITY_END = datetime.max
+
+
 class InvalidPeriodException(Exception):
     """ Raised when a period is incoherent, ie with its beginning later than its end """
     def __init__(self, begin, end):
@@ -23,13 +27,17 @@ class SeparatePeriodsExceptions(Exception):
 class TimePeriod:
     """ An immutable object describing a time period, with a beginning and an end
 
-    :param begin: datetime marking the beginning of the period
-    :param end: datetime marking the beginning of the period, taking place AFTER begin
+    :param begin: datetime marking the beginning of the period or None if infinite
+    :param end: datetime marking the beginning of the period, taking place AFTER begin or None if infinite
     """
 
     __slots__ = []
 
     def __init__(self, begin, end):
+        if begin is None:
+            begin = INFINITY_BEGIN
+        if end is None:
+            end = INFINITY_END
         if begin >= end:
             raise InvalidPeriodException(begin, end)
         self.begin = begin
@@ -72,9 +80,9 @@ class TimePeriod:
         return self == other or self < other
 
     def __contains__(self, item):
-        """ Test if the item is contained in this period """
+        """ Test if the item and this period overlap """
         if isinstance(item, self.__class__):
-            return self.begin <= item.begin and self.end >= item.end
+            return self.begin <= item.end and self.end >= item.begin
         return self.begin <= item <= self.end
 
     def __or__(self, other):
