@@ -7,5 +7,5 @@ setup(
     description='Time Periods Format',
     author='Alexis Braine',
     author_email='alexis.braine94@gmail.com',
-    packages=['TimePeriod'],
+    packages=['TimePeriods'],
 )
