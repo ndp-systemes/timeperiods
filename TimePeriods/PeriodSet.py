@@ -14,7 +14,16 @@ class TimePeriodSet:
 
     @property
     def periods(self):
+        """ All TimePeriod contained in this TimePeriodSet """
         return self._periods
+
+    def __copy__(self):
+        """ Makes a deep copy of a TimePeriodSet, copying all TimePeriod contained """
+        new = self.__class__()
+        new._periods = [period.copy() for period in self._periods]
+        return new
+
+    copy = __copy__
 
     def __ior__(self, other):
         """ Union of self and other
@@ -60,6 +69,12 @@ class TimePeriodSet:
     __iadd__ = __ior__
 
     def __iand__(self, other):
+        """ Intersection of self and other
+
+        :param other: A TimePeriod or TimePeriodSet; the current set will be equal to all the TimePeriod contained both
+                      in itself and in other
+        :rtype: TimePeriodSet
+        """
         def _get_next_period(idx):
             idx += 1
             if idx >= len(self):
@@ -101,10 +116,34 @@ class TimePeriodSet:
         self._periods = common_periods
         return self
 
+    def __and__(self, other):
+        """ Intersection between one or many TimePeriods
+
+        :param other: a TimePeriodSet or TimePeriod
+        :return: All TimePeriod contained both in self's `period` and in other
+        """
+        new = self.copy()
+        new &= other
+        return new
+
+    def __or__(self, other):
+        """ Union between one or manyTimePeriods
+
+        :param other: a TimePeriodSet or TimePeriod
+        :return: All TimePeriod contained either in self's `period` or in other
+        """
+        new = self.copy()
+        new |= other
+        return new
+
+    __add__ = __or__
+
     def __len__(self):
+        """ Return how many distinct TimePeriod are contained in this set """
         return len(self._periods)
 
     def __getitem__(self, item):
+        """ Return the period at index `item` """
         return self._periods[item]
 
     def __iter__(self):
@@ -112,7 +151,11 @@ class TimePeriodSet:
             yield period
 
     def __eq__(self, other):
+        """ Checks if each of two TimePeriodSets' TimePeriods are identical """
         return len(self) == len(other) and all(period == other_period for period, other_period in zip(self, other))
+
+    def __nonzero__(self):
+        return bool(self._periods)
 
     def __repr__(self):
         return u"<TimePeriodSet(%s)>" % u", ".join(u"[%s, %s]" % (p.begin, p.end) for p in self)
