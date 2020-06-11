@@ -13,6 +13,13 @@ class PeriodSetTest(unittest.TestCase):
             TimePeriod(datetime(1994, 3, 22), datetime(1994, 4, 1)),
             TimePeriod(datetime(1994, 11, 1), datetime(1994, 11, 30)),
         )
+        self.other_period_set = TimePeriodSet(
+            TimePeriod(datetime(1994, 1, 29), datetime(1994, 2, 7)),
+            TimePeriod(datetime(1994, 2, 24), datetime(1994, 3, 5)),
+            TimePeriod(datetime(1994, 3, 27), datetime(1994, 3, 29)),
+            TimePeriod(datetime(1994, 7, 1), datetime(1994, 7, 28)),
+            TimePeriod(datetime(1994, 10, 28), datetime(1994, 12, 8)),
+        )
 
     def test_00_period_equals(self):
         self.assertEqual(
@@ -75,7 +82,7 @@ class PeriodSetTest(unittest.TestCase):
         )
 
     def test_10_union_period_overlapping_end(self):
-        self.period_set += TimePeriod(
+        self.period_set |= TimePeriod(
             datetime(1994, 2, 27),
             datetime(1994, 3, 10)
         )
@@ -89,7 +96,7 @@ class PeriodSetTest(unittest.TestCase):
         )
 
     def test_11_union_period_overlapping_start(self):
-        self.period_set += TimePeriod(
+        self.period_set |= TimePeriod(
             datetime(1994, 3, 10),
             datetime(1994, 3, 23)
         )
@@ -103,7 +110,7 @@ class PeriodSetTest(unittest.TestCase):
         )
 
     def test_12_union_period_overlapping_both(self):
-        self.period_set += TimePeriod(
+        self.period_set |= TimePeriod(
             datetime(1994, 2, 27),
             datetime(1994, 3, 23)
         )
@@ -116,7 +123,7 @@ class PeriodSetTest(unittest.TestCase):
         )
 
     def test_13_union_period_not_overlapping(self):
-        self.period_set += TimePeriod(
+        self.period_set |= TimePeriod(
             datetime(1994, 6, 1),
             datetime(1994, 6, 30),
         )
@@ -131,7 +138,7 @@ class PeriodSetTest(unittest.TestCase):
         )
 
     def test_14_union_period_including(self):
-        self.period_set += TimePeriod(
+        self.period_set |= TimePeriod(
             datetime(1994, 1, 20),
             datetime(1994, 3, 10),
         )
@@ -145,7 +152,7 @@ class PeriodSetTest(unittest.TestCase):
         )
 
     def test_15_union_period_included(self):
-        self.period_set += TimePeriod(
+        self.period_set |= TimePeriod(
             datetime(1994, 2, 7),
             datetime(1994, 2, 14),
         )
@@ -228,6 +235,34 @@ class PeriodSetTest(unittest.TestCase):
                 TimePeriod(datetime(1994, 2, 7), datetime(1994, 2, 14)),
             ),
         )
+
+    def test_30_union_between_sets(self):
+        self.assertEqual(self.period_set | self.other_period_set, TimePeriodSet(
+            TimePeriod(datetime(1994, 1, 29), datetime(1994, 3, 5)),
+            TimePeriod(datetime(1994, 3, 22), datetime(1994, 4, 1)),
+            TimePeriod(datetime(1994, 7, 1), datetime(1994, 7, 28)),
+            TimePeriod(datetime(1994, 10, 28), datetime(1994, 12, 8)),
+        ))
+
+    def test_31_ensure_binary_union_works_like_unary(self):
+        new = self.period_set | self.other_period_set
+        self.assertNotEqual(self.period_set, new)
+        self.period_set |= self.other_period_set
+        self.assertEqual(self.period_set, new)
+
+    def test_40_intersection_between_sets(self):
+        self.assertEqual(self.period_set & self.other_period_set, TimePeriodSet(
+            TimePeriod(datetime(1994, 2, 1), datetime(1994, 2, 7)),
+            TimePeriod(datetime(1994, 2, 24), datetime(1994, 2, 28)),
+            TimePeriod(datetime(1994, 3, 27), datetime(1994, 3, 29)),
+            TimePeriod(datetime(1994, 11, 1), datetime(1994, 11, 30)),
+        ))
+
+    def test_41_ensure_binary_intersection_works_like_unary(self):
+        new = self.period_set & self.other_period_set
+        self.assertNotEqual(self.period_set, new)
+        self.period_set &= self.other_period_set
+        self.assertEqual(self.period_set, new)
 
 
 if __name__ == '__main__':

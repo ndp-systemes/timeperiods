@@ -39,6 +39,12 @@ class TimePeriod:
     def duration(self):
         return self.end - self.begin
 
+    def __copy__(self):
+        return self.__class__(self.begin, self.end)
+
+    def copy(self):
+        return self.__copy__()
+
     def __str__(self):
         return u"%s - %s" % (self.begin, self.end)
 
@@ -46,27 +52,36 @@ class TimePeriod:
         return u"<TimePeriod(%s, %s)>" % (self.begin, self.end)
 
     def __gt__(self, other):
+        """ Compare if this period starts after another """
         return self.begin > other.begin
 
     def __lt__(self, other):
+        """ Compare if this period starts before another """
         return self.begin < other.begin
 
     def __eq__(self, other):
+        """ Compare if this period starts and ends on the same dates as another """
         return self.begin == other.begin and self.end == other.end
 
     def __ge__(self, other):
+        """ Compare if this period is equal or starts later than another """
         return self == other or self > other
 
     def __le__(self, other):
+        """ Compare if this period is equal or starts earlier than another """
         return self == other or self < other
 
     def __contains__(self, item):
+        """ Test if the item is contained in this period """
         if isinstance(item, self.__class__):
-            first, second = sorted((self, item))
-            return first.end >= second.begin
+            return self.begin <= item.begin and self.end >= item.end
         return self.begin <= item <= self.end
 
     def __or__(self, other):
+        """ Merge two periods into one
+
+        If the two are disjointed, raise a SeparatePeriodsExceptions
+        """
         first, second = sorted((self, other))
         if first.end < second.begin:
             raise SeparatePeriodsExceptions((first, second))
@@ -76,6 +91,10 @@ class TimePeriod:
             return self.__class__(first.begin, second.end)
 
     def __and__(self, other):
+        """ Makes the intersection between two periods
+
+        If the two are disjointed, raise a SeparatePeriodsExceptions
+        """
         first, second = sorted((self, other))
         if first.end < second.begin:
             raise SeparatePeriodsExceptions((first, second))
