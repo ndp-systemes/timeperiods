@@ -2,9 +2,14 @@
 from datetime import datetime
 
 
+INFINITY_BEGIN = datetime.min
+INFINITY_END = datetime.max
+
+
 class InvalidPeriodException(Exception):
     """ Raised when a period is incoherent, ie with its beginning later than its end """
     def __init__(self, begin, end):
+        super(InvalidPeriodException, self).__init__()
         self.start, self.end = begin, end
 
     def __str__(self):
@@ -14,26 +19,37 @@ class InvalidPeriodException(Exception):
 class SeparatePeriodsExceptions(Exception):
     """ Raised when two periods or more should have an intersection, but have not """
     def __init__(self, *periods):
+        super(SeparatePeriodsExceptions, self).__init__()
         self.periods = tuple(periods)
 
     def __str__(self):
         return u"The following period do not have a common intersection : %s" % u", ".join(self.periods)
 
 
-class TimePeriod:
+class TimePeriod(object):
     """ An immutable object describing a time period, with a beginning and an end
 
-    :param begin: datetime marking the beginning of the period
-    :param end: datetime marking the beginning of the period, taking place AFTER begin
+    :param begin: datetime marking the beginning of the period or None if infinite
+    :param end: datetime marking the beginning of the period, taking place AFTER begin or None if infinite
     """
 
-    __slots__ = []
-
     def __init__(self, begin, end):
+        if begin is None:
+            begin = INFINITY_BEGIN
+        if end is None:
+            end = INFINITY_END
         if begin >= end:
             raise InvalidPeriodException(begin, end)
-        self.begin = begin
-        self.end = end
+        self._begin = begin
+        self._end = end
+
+    @property
+    def begin(self):
+        return self._begin
+
+    @property
+    def end(self):
+        return self._end
 
     @property
     def duration(self):
@@ -72,9 +88,9 @@ class TimePeriod:
         return self == other or self < other
 
     def __contains__(self, item):
-        """ Test if the item is contained in this period """
+        """ Test if the item and this period overlap """
         if isinstance(item, self.__class__):
-            return self.begin <= item.begin and self.end >= item.end
+            return self.begin <= item.end and self.end >= item.begin
         return self.begin <= item <= self.end
 
     def __or__(self, other):
@@ -87,8 +103,7 @@ class TimePeriod:
             raise SeparatePeriodsExceptions((first, second))
         if first.end >= second.end:
             return first
-        else:
-            return self.__class__(first.begin, second.end)
+        return self.__class__(first.begin, second.end)
 
     def __and__(self, other):
         """ Makes the intersection between two periods
@@ -100,7 +115,6 @@ class TimePeriod:
             raise SeparatePeriodsExceptions((first, second))
         if second.end <= first.end:
             return second
-        else:
-            return self.__class__(second.begin, first.end)
+        return self.__class__(second.begin, first.end)
 
     __add__ = __or__

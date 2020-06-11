@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from .. import TimePeriod, TimePeriodSet
+from .. import TimePeriod, TimePeriodSet, INFINITY_BEGIN, INFINITY_END
 
 
 class PeriodSetTest(unittest.TestCase):
@@ -263,6 +263,101 @@ class PeriodSetTest(unittest.TestCase):
         self.assertNotEqual(self.period_set, new)
         self.period_set &= self.other_period_set
         self.assertEqual(self.period_set, new)
+
+    def test_50_infinite_begin_period_ending_before(self):
+        infinite_begin_period = TimePeriodSet(TimePeriod(INFINITY_BEGIN, datetime(1994, 1, 1)))
+        expected_union = TimePeriodSet(
+            TimePeriod(INFINITY_BEGIN, datetime(1994, 1, 1)),
+            TimePeriod(datetime(1994, 2, 1), datetime(1994, 2, 28)),
+            TimePeriod(datetime(1994, 3, 22), datetime(1994, 4, 1)),
+            TimePeriod(datetime(1994, 11, 1), datetime(1994, 11, 30)),
+        )
+        self.assertEqual(infinite_begin_period | self.period_set, expected_union)
+        self.assertEqual(self.period_set | infinite_begin_period, expected_union)
+        self.assertEqual(infinite_begin_period & self.period_set, TimePeriodSet())
+        self.assertEqual(self.period_set & infinite_begin_period, TimePeriodSet())
+
+    def test_51_infinite_begin_period_ending_in_period(self):
+        infinite_begin_period = TimePeriodSet(TimePeriod(INFINITY_BEGIN, datetime(1994, 2, 7)))
+        expected_union = TimePeriodSet(
+            TimePeriod(INFINITY_BEGIN, datetime(1994, 2, 28)),
+            TimePeriod(datetime(1994, 3, 22), datetime(1994, 4, 1)),
+            TimePeriod(datetime(1994, 11, 1), datetime(1994, 11, 30)),
+        )
+        expected_intersection = TimePeriodSet(
+            TimePeriod(datetime(1994, 2, 1), datetime(1994, 2, 7))
+        )
+        self.assertEqual(infinite_begin_period | self.period_set, expected_union)
+        self.assertEqual(self.period_set | infinite_begin_period, expected_union)
+        self.assertEqual(infinite_begin_period & self.period_set, expected_intersection)
+        self.assertEqual(self.period_set & infinite_begin_period, expected_intersection)
+
+    def test_52_infinite_begin_period_ending_after_period(self):
+        infinite_begin_period = TimePeriodSet(TimePeriod(INFINITY_BEGIN, datetime(1994, 3, 7)))
+        expected_union = TimePeriodSet(
+            TimePeriod(INFINITY_BEGIN, datetime(1994, 3, 7)),
+            TimePeriod(datetime(1994, 3, 22), datetime(1994, 4, 1)),
+            TimePeriod(datetime(1994, 11, 1), datetime(1994, 11, 30)),
+        )
+        expected_intersection = TimePeriodSet(
+            TimePeriod(datetime(1994, 2, 1), datetime(1994, 2, 28))
+        )
+        self.assertEqual(infinite_begin_period | self.period_set, expected_union)
+        self.assertEqual(self.period_set | infinite_begin_period, expected_union)
+        self.assertEqual(infinite_begin_period & self.period_set, expected_intersection)
+        self.assertEqual(self.period_set & infinite_begin_period, expected_intersection)
+
+    def test_60_infinite_end_period_beginning_after(self):
+        infinite_end_period = TimePeriodSet(TimePeriod(datetime(1994, 12, 8), INFINITY_END))
+        expected_union = TimePeriodSet(
+            TimePeriod(datetime(1994, 2, 1), datetime(1994, 2, 28)),
+            TimePeriod(datetime(1994, 3, 22), datetime(1994, 4, 1)),
+            TimePeriod(datetime(1994, 11, 1), datetime(1994, 11, 30)),
+            TimePeriod(datetime(1994, 12, 8), INFINITY_END),
+        )
+        self.assertEqual(infinite_end_period | self.period_set, expected_union)
+        self.assertEqual(self.period_set | infinite_end_period, expected_union)
+        self.assertEqual(infinite_end_period & self.period_set, TimePeriodSet())
+        self.assertEqual(self.period_set & infinite_end_period, TimePeriodSet())
+
+    def test_61_infinite_end_period_beginning_in_period(self):
+        infinite_end_period = TimePeriodSet(TimePeriod(datetime(1994, 11, 27), INFINITY_END))
+        expected_union = TimePeriodSet(
+            TimePeriod(datetime(1994, 2, 1), datetime(1994, 2, 28)),
+            TimePeriod(datetime(1994, 3, 22), datetime(1994, 4, 1)),
+            TimePeriod(datetime(1994, 11, 1), INFINITY_END),
+        )
+        expected_intersection = TimePeriodSet(
+            TimePeriod(datetime(1994, 11, 27), datetime(1994, 11, 30))
+        )
+        self.assertEqual(infinite_end_period | self.period_set, expected_union)
+        self.assertEqual(self.period_set | infinite_end_period, expected_union)
+        self.assertEqual(infinite_end_period & self.period_set, expected_intersection)
+        self.assertEqual(self.period_set & infinite_end_period, expected_intersection)
+
+    def test_62_infinite_end_period_ending_before_period(self):
+        infinite_end_period = TimePeriodSet(TimePeriod(datetime(1994, 10, 30), INFINITY_END))
+        expected_union = TimePeriodSet(
+            TimePeriod(datetime(1994, 2, 1), datetime(1994, 2, 28)),
+            TimePeriod(datetime(1994, 3, 22), datetime(1994, 4, 1)),
+            TimePeriod(datetime(1994, 10, 30), INFINITY_END),
+        )
+        expected_intersection = TimePeriodSet(
+            TimePeriod(datetime(1994, 11, 1), datetime(1994, 11, 30))
+        )
+        self.assertEqual(infinite_end_period | self.period_set, expected_union)
+        self.assertEqual(self.period_set | infinite_end_period, expected_union)
+        self.assertEqual(infinite_end_period & self.period_set, expected_intersection)
+        self.assertEqual(self.period_set & infinite_end_period, expected_intersection)
+
+    def test_70_infinite_begin_and_end_period(self):
+        infinite_period = TimePeriodSet(TimePeriod(INFINITY_BEGIN, INFINITY_END))
+        expected_union = infinite_period
+        expected_intersection = self.period_set
+        self.assertEqual(infinite_period | self.period_set, expected_union)
+        self.assertEqual(self.period_set | infinite_period, expected_union)
+        self.assertEqual(infinite_period & self.period_set, expected_intersection)
+        self.assertEqual(self.period_set & infinite_period, expected_intersection)
 
 
 if __name__ == '__main__':
