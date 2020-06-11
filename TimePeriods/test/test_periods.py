@@ -358,7 +358,7 @@ class PeriodSetTest(unittest.TestCase):
         self.assertEqual(self.period_set | infinite_period, expected_union)
         self.assertEqual(infinite_period & self.period_set, expected_intersection)
         self.assertEqual(self.period_set & infinite_period, expected_intersection)
-        
+
 
 if __name__ == '__main__':
     unittest.main()

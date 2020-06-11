@@ -1,7 +1,7 @@
 from .Period import TimePeriod
 
 
-class TimePeriodSet:
+class TimePeriodSet(object):
     """ An iterable containing one or more TimePeriod
 
     :param periods: One or more TimePeriod
@@ -57,9 +57,9 @@ class TimePeriodSet:
         # If no common TimePeriod, new_period is exactly other.
         # Else, it starts with the earliest start, and ends with the latest end
         new_period = TimePeriod(
-                    min(intersection_periods[0].begin, other.begin),
-                    max(intersection_periods[-1].end, other.end)
-                ) \
+            min(intersection_periods[0].begin, other.begin),
+            max(intersection_periods[-1].end, other.end)
+        ) \
             if intersection_periods \
             else other
 
