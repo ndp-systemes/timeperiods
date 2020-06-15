@@ -9,8 +9,12 @@ class TimePeriodSet(object):
 
     def __init__(self, *periods):
         self._periods = []
-        for period in periods:
-            self += period
+        for period_or_iter in periods:
+            if hasattr(period_or_iter, '__iter__'):
+                for period in period_or_iter:
+                    self += period
+            else:
+                self += period_or_iter
 
     @property
     def periods(self):
@@ -140,6 +144,10 @@ class TimePeriodSet(object):
         return new
 
     __add__ = __or__
+
+    def __contains__(self, item):
+        """ Test if a TimePeriod or datetime.datetime is contained in this TimePeriodSet """
+        return any(item in period for period in self._periods)
 
     def __len__(self):
         """ Return how many distinct TimePeriod are contained in this set """
